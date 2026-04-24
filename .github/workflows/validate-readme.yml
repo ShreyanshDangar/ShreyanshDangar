@@ -1,0 +1,39 @@
+name: Validate README Assets
+
+on:
+  push:
+    paths:
+      - 'README.md'
+      - '.github/workflows/validate-readme.yml'
+  schedule:
+    - cron: '0 6 1 * *
+  workflow_dispatch:
+
+jobs:
+  link-check:
+    name: Check README Links & Live Assets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run lychee link checker
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: >-
+            --verbose
+            --no-progress
+            --max-concurrency 8
+            --accept 200,201,202,204,206,301,302,303,307,308,403,429
+            --timeout 30
+            README.md
+          fail: false
+          output: ./lychee-report.md
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lychee-report
+          path: ./lychee-report.md
+          retention-days: 14
